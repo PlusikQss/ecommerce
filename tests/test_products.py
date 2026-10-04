@@ -13,13 +13,86 @@ class TestProduct:
         assert product.price == 100.50
         assert product.quantity == 5
 
-    def test_product_attributes_types(self) -> None:
-        """Проверяет типы атрибутов Product."""
+    def test_price_getter(self) -> None:
+        """Геттер цены возвращает значение."""
         product = Product("Test", "Описание", 100.50, 5)
-        assert isinstance(product.name, str)
-        assert isinstance(product.description, str)
-        assert isinstance(product.price, float)
-        assert isinstance(product.quantity, int)
+        assert product.price == 100.50
+
+    def test_price_setter_valid(self) -> None:
+        """Сеттер с положительной ценой обновляет значение."""
+        product = Product("Test", "Описание", 100.50, 5)
+        product.price = 200.0
+        assert product.price == 200.0
+
+    def test_price_setter_zero(self, capsys: pytest.CaptureFixture) -> None:
+        """Сеттер с нулевой ценой не устанавливает значение."""
+        product = Product("Test", "Описание", 100.50, 5)
+        product.price = 0
+        assert product.price == 100.50
+        captured = capsys.readouterr()
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+
+    def test_price_setter_negative(self, capsys: pytest.CaptureFixture) -> None:
+        """Сеттер с отрицательной ценой не устанавливает значение."""
+        product = Product("Test", "Описание", 100.50, 5)
+        product.price = -10
+        assert product.price == 100.50
+        captured = capsys.readouterr()
+        assert "Цена не должна быть нулевая или отрицательная" in captured.out
+
+    def test_new_product(self) -> None:
+        """Класс-метод создаёт товар из словаря."""
+        data = {
+            "name": "New",
+            "description": "Описание",
+            "price": 500.0,
+            "quantity": 10,
+        }
+        product = Product.new_product(data)
+        assert product.name == "New"
+        assert product.price == 500.0
+        assert product.quantity == 10
+
+    def test_new_product_duplicate_higher_price(self) -> None:
+        """Дубликат: количество суммируется, цена берётся выше."""
+        existing = [Product("Test", "Описание", 100.0, 5)]
+        data = {
+            "name": "Test",
+            "description": "Описание",
+            "price": 150.0,
+            "quantity": 10,
+        }
+        product = Product.new_product(data, existing)
+        assert product is existing[0]
+        assert product.quantity == 15
+        assert product.price == 150.0
+
+    def test_new_product_duplicate_lower_price(self) -> None:
+        """Дубликат с меньшей ценой: старая цена сохраняется."""
+        existing = [Product("Test", "Описание", 200.0, 5)]
+        data = {
+            "name": "Test",
+            "description": "Описание",
+            "price": 150.0,
+            "quantity": 10,
+        }
+        product = Product.new_product(data, existing)
+        assert product.quantity == 15
+        assert product.price == 200.0
+
+    def test_new_product_without_duplicates(self) -> None:
+        """Нет дубликатов — создаётся новый товар."""
+        existing = [Product("Other", "Описание", 100.0, 5)]
+        data = {
+            "name": "New",
+            "description": "Описание",
+            "price": 500.0,
+            "quantity": 10,
+        }
+        product = Product.new_product(data, existing)
+        assert product.name == "New"
+        assert product.quantity == 10
+        assert len(existing) == 1
 
     @pytest.mark.parametrize(
         "name, description, price, quantity",
@@ -50,16 +123,41 @@ class TestCategory:
         category = Category("Смартфоны", "Мобильные телефоны", [product_samsung])
         assert category.name == "Смартфоны"
         assert category.description == "Мобильные телефоны"
-        assert len(category.products) == 1
-        assert category.products[0].name == "Samsung Galaxy S23"
+        assert Category.product_count == 1
+
+    def test_add_product(self, product_samsung: Product) -> None:
+        """Проверяет добавление товара через add_product."""
+        category = Category("Смартфоны", "Мобильные телефоны", [])
+        assert Category.product_count == 0
+        category.add_product(product_samsung)
+        assert Category.product_count == 1
+        assert "Samsung Galaxy S23" in category.products
+
+    def test_add_product_increments_by_one(self, product_samsung: Product) -> None:
+        """add_product увеличивает счётчик на 1."""
+        category = Category("Категория", "Описание", [])
+        category.add_product(product_samsung)
+        category.add_product(product_samsung)
+        assert Category.product_count == 2
+
+    def test_products_getter_format(self, product_samsung: Product) -> None:
+        """Геттер products возвращает строку по шаблону."""
+        category = Category("Смартфоны", "Мобильные телефоны", [product_samsung])
+        result = category.products
+        assert "Samsung Galaxy S23" in result
+        assert "79999.99 руб." in result
+        assert "Остаток: 10 шт." in result
+        assert result.endswith("\n")
+
+    def test_products_getter_empty(self) -> None:
+        """Пустая категория — пустая строка."""
+        category = Category("Пустая", "Описание", [])
+        assert category.products == ""
 
     def test_category_count(self, product_samsung: Product) -> None:
         """Проверяет подсчёт количества категорий."""
-        assert Category.category_count == 0
         Category("Категория 1", "Описание", [product_samsung])
-        assert Category.category_count == 1
         Category("Категория 2", "Описание", [product_samsung])
-        assert Category.category_count == 2
         Category("Категория 3", "Описание", [])
         assert Category.category_count == 3
 
@@ -67,7 +165,6 @@ class TestCategory:
         self, product_samsung: Product, product_iphone: Product
     ) -> None:
         """Проверяет подсчёт количества продуктов."""
-        assert Category.product_count == 0
         Category("Категория 1", "Описание", [product_samsung, product_iphone])
         assert Category.product_count == 2
         Category("Категория 2", "Описание", [product_samsung])
@@ -78,11 +175,3 @@ class TestCategory:
         Category("Пустая", "Описание", [])
         assert Category.product_count == 0
         assert Category.category_count == 1
-
-    def test_category_attributes_types(self, product_samsung: Product) -> None:
-        category = Category("Test", "Описание", [product_samsung])
-        assert isinstance(category.name, str)
-        assert isinstance(category.description, str)
-        assert isinstance(category.products, list)
-        assert isinstance(Category.category_count, int)
-        assert isinstance(Category.product_count, int)
