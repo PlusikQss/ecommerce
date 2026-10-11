@@ -1,12 +1,11 @@
-from typing import List
+from typing import Any, Dict, List, Optional
 
 
 class Product:
-    """Класс для описания товара."""
+    """Класс для описания товара в магазине."""
 
     name: str
     description: str
-    price: float
     quantity: int
 
     def __init__(
@@ -32,8 +31,94 @@ class Product:
         """
         self.name = name
         self.description = description
-        self.price = price
+        self._price = price
         self.quantity = quantity
+
+    def __str__(self) -> str:
+        """
+        Строковое представление товара.
+
+        Формат: "Название продукта, X руб. Остаток: X шт."
+        """
+        return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
+
+    def __add__(self, other: "Product") -> float:
+        """
+        Сложение двух товаров — общая стоимость на складе.
+
+        Возвращает сумму произведений цены на количество у двух товаров.
+
+        Параметры
+        ---------
+        other : Product
+            Второй товар.
+
+        Возвращает
+        ----------
+        float
+            Общая стоимость двух товаров на складе.
+        """
+        if not isinstance(other, Product):
+            raise TypeError(
+                f"Нельзя сложить Product с {type(other).__name__}"
+            )
+        return self.price * self.quantity + other.price * other.quantity
+
+    @property
+    def price(self) -> float:
+        """Геттер для цены товара."""
+        return self._price
+
+    @price.setter
+    def price(self, new_price: float) -> None:
+        """
+        Сеттер для цены с проверкой на положительное значение.
+
+        Если новое значение <= 0 — выводит сообщение и не устанавливает цену.
+        """
+        if new_price <= 0:
+            print("Цена не должна быть нулевая или отрицательная")
+            return
+        self._price = new_price
+
+    @classmethod
+    def new_product(
+        cls,
+        product_data: Dict[str, Any],
+        existing_products: Optional[List["Product"]] = None,
+    ) -> "Product":
+        """
+        Создаёт новый товар из словаря.
+
+        Если передан список существующих товаров, ищет дубликат по имени.
+        При совпадении — складывает количество и выбирает большую цену.
+
+        Параметры
+        ---------
+        product_data : Dict[str, Any]
+            Словарь с ключами name, description, price, quantity.
+        existing_products : Optional[List[Product]]
+            Список уже существующих товаров для проверки дубликатов.
+
+        Возвращает
+        ----------
+        Product
+            Созданный или обновлённый товар.
+        """
+        name = product_data["name"]
+        description = product_data["description"]
+        price = product_data["price"]
+        quantity = product_data["quantity"]
+
+        if existing_products:
+            for product in existing_products:
+                if product.name == name:
+                    product.quantity += quantity
+                    if price > product.price:
+                        product._price = price
+                    return product
+
+        return cls(name, description, price, quantity)
 
 
 class Category:
@@ -41,7 +126,6 @@ class Category:
 
     name: str
     description: str
-    products: List[Product]
 
     # Атрибуты класса
     category_count: int = 0
@@ -67,8 +151,43 @@ class Category:
         """
         self.name = name
         self.description = description
-        self.products = products
+        self._products: List[Product] = []
 
-        # Обновляем атрибуты класса
+        for product in products:
+            self.add_product(product)
+
         Category.category_count += 1
-        Category.product_count += len(products)
+
+    def __str__(self) -> str:
+        """
+        Строковое представление категории.
+
+        Формат: "Название категории, количество продуктов: X шт."
+        Количество продуктов — общее количество всех товаров на складе.
+        """
+        total_quantity = sum(product.quantity for product in self._products)
+        return f"{self.name}, количество продуктов: {total_quantity} шт."
+
+    def add_product(self, product: Product) -> None:
+        """
+        Добавляет товар в категорию.
+
+        Увеличивает счётчик товаров на 1.
+
+        Параметры
+        ---------
+        product : Product
+            Товар для добавления.
+        """
+        self._products.append(product)
+        Category.product_count += 1
+
+    @property
+    def products(self) -> str:
+        """
+        Возвращает строку со всеми товарами категории.
+
+        Формат каждой строки:
+        "Название продукта, X руб. Остаток: X шт.\\n"
+        """
+        return "".join(f"{product}\n" for product in self._products)
