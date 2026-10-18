@@ -1,19 +1,13 @@
-## Наследование
+## Абстрактный класс и миксин
 
-### `Smartphone` — наследник `Product`
+### `BaseProduct` — абстрактный базовый класс
 
-Дополнительные атрибуты:
-- `efficiency` (float) — производительность
-- `model` (str) — модель
-- `memory` (int) — объём встроенной памяти
-- `color` (str) — цвет
+Родительский класс для `Product`. Описывает общий интерфейс всех продуктов:
+- `__str__` — строковое представление
+- `__add__` — сложение продуктов одного класса
+
+Напрямую создать `BaseProduct` нельзя — только наследников.
 
 ```python
-from src.products import Smartphone
-
-phone = Smartphone(
-    "Samsung Galaxy S23", "Смартфон", 79999.99, 10,
-    efficiency=95.0, model="Galaxy S23", memory=256, color="чёрный",
-)
-print(phone)
-# Samsung Galaxy S23, 79999.99 руб. Остаток: 10 шт.
+from src.products import BaseProduct
+BaseProduct()  # TypeError: Can't instantiate abstract class

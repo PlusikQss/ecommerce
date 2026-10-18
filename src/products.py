@@ -1,12 +1,38 @@
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 
 
-class Product:
-    """Базовый класс для описания товара в магазине."""
+class BaseProduct(ABC):
+    """Абстрактный базовый класс для всех продуктов магазина."""
 
     name: str
     description: str
     quantity: int
+
+    @abstractmethod
+    def __str__(self) -> str:
+        """Строковое представление продукта."""
+        ...
+
+    @abstractmethod
+    def __add__(self, other: "BaseProduct") -> float:
+        """Сложение продуктов одного класса."""
+        ...
+
+
+class CreationInfoMixin:
+    """Миксин для вывода информации о создании объекта."""
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__()
+        args_repr = [repr(arg) for arg in args]
+        kwargs_repr = [f"{key}={value!r}" for key, value in kwargs.items()]
+        params = ", ".join(args_repr + kwargs_repr)
+        print(f"{self.__class__.__name__}({params})")
+
+
+class Product(CreationInfoMixin, BaseProduct):
+    """Класс для описания товара."""
 
     def __init__(
         self,
@@ -29,6 +55,7 @@ class Product:
         quantity : int
             Количество в наличии.
         """
+        super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description
         self._price = price
@@ -39,11 +66,7 @@ class Product:
         return f"{self.name}, {self.price} руб. Остаток: {self.quantity} шт."
 
     def __add__(self, other: "Product") -> float:
-        """
-        Сложение двух товаров — общая стоимость на складе.
-
-        Складывать можно только товары одного класса.
-        """
+        """Сложение двух товаров одного класса."""
         if not isinstance(other, Product):
             raise TypeError(f"Нельзя сложить Product с {type(other).__name__}")
         if type(self) is not type(other):
@@ -103,15 +126,7 @@ class Smartphone(Product):
         memory: int,
         color: str,
     ) -> None:
-        """
-        Инициализирует смартфон.
-
-        Дополнительные параметры:
-        efficiency — производительность,
-        model — модель,
-        memory — объём встроенной памяти,
-        color — цвет.
-        """
+        """Инициализирует смартфон."""
         super().__init__(name, description, price, quantity)
         self.efficiency = efficiency
         self.model = model
@@ -132,14 +147,7 @@ class LawnGrass(Product):
         germination_period: str,
         color: str,
     ) -> None:
-        """
-        Инициализирует газонную траву.
-
-        Дополнительные параметры:
-        country — страна-производитель,
-        germination_period — срок прорастания,
-        color — цвет.
-        """
+        """Инициализирует газонную траву."""
         super().__init__(name, description, price, quantity)
         self.country = country
         self.germination_period = germination_period
@@ -177,12 +185,7 @@ class Category:
         return f"{self.name}, количество продуктов: {total_quantity} шт."
 
     def add_product(self, product: Product) -> None:
-        """
-        Добавляет товар в категорию.
-
-        Принимает только объекты Product и его наследников.
-        Иначе выбрасывает TypeError.
-        """
+        """Добавляет товар в категорию."""
         if not isinstance(product, Product):
             raise TypeError(
                 "В категорию можно добавлять только Product и его наследников"

@@ -1,6 +1,13 @@
 import pytest
 
-from src.products import Category, LawnGrass, Product, Smartphone
+from src.products import (
+    BaseProduct,
+    Category,
+    CreationInfoMixin,
+    LawnGrass,
+    Product,
+    Smartphone,
+)
 
 
 class TestProduct:
@@ -151,3 +158,69 @@ class TestCategory:
             [smartphone_samsung, smartphone_iphone],
         )
         assert str(category) == "Смартфоны, количество продуктов: 15 шт."
+
+
+class TestBaseProduct:
+
+    def test_base_product_is_abstract(self) -> None:
+        with pytest.raises(TypeError):
+            BaseProduct()  # type: ignore[abstract]
+
+    def test_product_is_base_product_subclass(self, product_samsung: Product) -> None:
+        assert isinstance(product_samsung, BaseProduct)
+
+    def test_smartphone_is_base_product_subclass(
+        self, smartphone_samsung: Smartphone
+    ) -> None:
+        assert isinstance(smartphone_samsung, BaseProduct)
+
+    def test_lawn_grass_is_base_product_subclass(self, lawn_grass: LawnGrass) -> None:
+        assert isinstance(lawn_grass, BaseProduct)
+
+
+class TestCreationInfoMixin:
+
+    def test_mixin_prints_on_product_creation(
+        self, capsys: pytest.CaptureFixture
+    ) -> None:
+        Product("Продукт1", "Описание продукта", 1200.0, 10)
+        captured = capsys.readouterr()
+        assert "Product(" in captured.out
+        assert "Продукт1" in captured.out
+        assert "1200.0" in captured.out
+
+    def test_mixin_prints_on_smartphone_creation(
+        self, capsys: pytest.CaptureFixture
+    ) -> None:
+        Smartphone(
+            "Samsung",
+            "Смартфон",
+            79999.99,
+            10,
+            efficiency=95.0,
+            model="S23",
+            memory=256,
+            color="чёрный",
+        )
+        captured = capsys.readouterr()
+        assert "Smartphone(" in captured.out
+        assert "Samsung" in captured.out
+
+    def test_mixin_prints_on_lawn_grass_creation(
+        self, capsys: pytest.CaptureFixture
+    ) -> None:
+        LawnGrass(
+            "Трава",
+            "Описание",
+            1200.0,
+            50,
+            country="Россия",
+            germination_period="7-14 дней",
+            color="зелёный",
+        )
+        captured = capsys.readouterr()
+        assert "LawnGrass(" in captured.out
+        assert "Трава" in captured.out
+
+    def test_mixin_in_mro(self) -> None:
+        assert CreationInfoMixin in Product.__mro__
