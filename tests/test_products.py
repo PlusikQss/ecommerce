@@ -222,3 +222,93 @@ class TestCreationInfoMixin:
 
     def test_mixin_in_mro(self) -> None:
         assert CreationInfoMixin in Product.__mro__
+
+
+class TestProductZeroQuantity:
+
+    def test_product_zero_quantity_raises(self) -> None:
+        """Product с quantity=0 выбрасывает ValueError."""
+        with pytest.raises(ValueError) as exc_info:
+            Product("Брак", "Описание", 100.0, 0)
+        assert "Товар с нулевым количеством не может быть добавлен" in str(
+            exc_info.value
+        )
+
+    def test_product_negative_quantity_raises(self) -> None:
+        """Product с отрицательным quantity выбрасывает ValueError."""
+        with pytest.raises(ValueError):
+            Product("Брак", "Описание", 100.0, -5)
+
+    def test_smartphone_zero_quantity_raises(self) -> None:
+        """Smartphone с quantity=0 выбрасывает ValueError."""
+        with pytest.raises(ValueError):
+            Smartphone(
+                "Samsung",
+                "Смартфон",
+                79999.99,
+                0,
+                efficiency=95.0,
+                model="S23",
+                memory=256,
+                color="чёрный",
+            )
+
+    def test_lawn_grass_zero_quantity_raises(self) -> None:
+        """LawnGrass с quantity=0 выбрасывает ValueError."""
+        with pytest.raises(ValueError):
+            LawnGrass(
+                "Трава",
+                "Описание",
+                1200.0,
+                0,
+                country="Россия",
+                germination_period="7-14 дней",
+                color="зелёный",
+            )
+
+
+class TestCategoryAveragePrice:
+
+    def setup_method(self) -> None:
+        Category.category_count = 0
+        Category.product_count = 0
+
+    def test_average_price(self) -> None:
+        """Средняя цена = сумма цен / количество товаров."""
+        p1 = Product("A", "Описание", 100.0, 1)
+        p2 = Product("B", "Описание", 200.0, 2)
+        category = Category("Категория", "Описание", [p1, p2])
+        assert category.average_price() == 150.0
+
+    def test_average_price_one_product(self) -> None:
+        """Категория с одним товаром — средняя = его цена."""
+        p = Product("A", "Описание", 100.0, 1)
+        category = Category("Категория", "Описание", [p])
+        assert category.average_price() == 100.0
+
+    def test_average_price_empty_category(self) -> None:
+        """Пустая категория — средняя цена 0."""
+        category = Category("Пустая", "Описание", [])
+        assert category.average_price() == 0.0
+
+    def test_average_price_returns_float(self) -> None:
+        """Метод возвращает float."""
+        p = Product("A", "Описание", 100.0, 1)
+        category = Category("Категория", "Описание", [p])
+        assert isinstance(category.average_price(), float)
+
+    @pytest.mark.parametrize(
+        "prices, expected",
+        [
+            ([100.0], 100.0),
+            ([100.0, 200.0], 150.0),
+            ([10.0, 20.0, 30.0], 20.0),
+            ([0.5, 0.5], 0.5),
+        ],
+    )
+    def test_average_price_parametrized(self, prices: list, expected: float) -> None:
+        products = [
+            Product(f"P{i}", "Описание", price, 1) for i, price in enumerate(prices)
+        ]
+        category = Category("Категория", "Описание", products)
+        assert category.average_price() == pytest.approx(expected)

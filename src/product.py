@@ -17,6 +17,8 @@ class Product(CreationInfoMixin, BaseProduct):
         """
         Инициализирует товар.
 
+        Выбрасывает ValueError, если количество <= 0.
+
         Параметры
         ---------
         name : str
@@ -28,6 +30,8 @@ class Product(CreationInfoMixin, BaseProduct):
         quantity : int
             Количество в наличии.
         """
+        if quantity <= 0:
+            raise ValueError("Товар с нулевым количеством не может быть добавлен")
         super().__init__(name, description, price, quantity)
         self.name = name
         self.description = description

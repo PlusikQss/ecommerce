@@ -81,6 +81,20 @@ def main() -> None:
     new_product = Product.new_product(new_data)
     print(f"Создан: {new_product}")
 
+    # НОВЫЕ ПРОВЕРКИ
+    print("\n--- Средний ценник ---")
+    print(f"Средняя цена: {category.average_price():.2f} руб.")
+
+    print("\n--- Пустая категория ---")
+    empty_category = Category("Пустая", "Нет товаров", [])
+    print(f"Средняя цена: {empty_category.average_price()}")
+
+    print("\n--- Нулевое количество ---")
+    try:
+        Product("Брак", "Описание", 100.0, 0)
+    except ValueError as exc:
+        print(f"Ошибка: {exc}")
+
 
 if __name__ == "__main__":
     main()
