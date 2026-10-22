@@ -44,6 +44,11 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 source = ["src"]
+omit = [
+    "tests/*",
+    "*/__pycache__/*",
+    "main.py",
+]
 
 [tool.coverage.report]
 show_missing = true
