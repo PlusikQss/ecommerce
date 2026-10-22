@@ -1,13 +1,11 @@
 import pytest
 
-from src.products import (
-    BaseProduct,
-    Category,
-    CreationInfoMixin,
-    LawnGrass,
-    Product,
-    Smartphone,
-)
+from src.base import BaseProduct
+from src.category import Category
+from src.lawn_grass import LawnGrass
+from src.mixins import CreationInfoMixin
+from src.product import Product
+from src.smartphone import Smartphone
 
 
 class TestProduct:

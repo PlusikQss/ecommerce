@@ -1,8 +1,11 @@
-from src.products import Category, LawnGrass, Product, Smartphone
+from src.category import Category
+from src.lawn_grass import LawnGrass
+from src.product import Product
+from src.smartphone import Smartphone
 
 
 def main() -> None:
-    """Демонстрация работы классов Product, Smartphone, LawnGrass, Category."""
+    """Демонстрация работы классов."""
     smartphone1 = Smartphone(
         "Samsung Galaxy S23",
         "Смартфон с отличной камерой",
