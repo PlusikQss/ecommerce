@@ -46,3 +46,15 @@ class Category:
     def products(self) -> str:
         """Возвращает строку со всеми товарами категории."""
         return "".join(f"{product}\n" for product in self._products)
+
+    def average_price(self) -> float:
+        """
+        Считает средний ценник всех товаров категории.
+
+        Если товаров нет — возвращает 0.
+        """
+        try:
+            total = sum(product.price for product in self._products)
+            return total / len(self._products)
+        except ZeroDivisionError:
+            return 0.0
